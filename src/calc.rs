@@ -29,12 +29,12 @@ pub(crate) struct TwilightResult {
      * Time of sunset (civil twilight) in milliseconds or -1 in the case the day
      * or night never ends.
      */
-    pub sunset: i64,
+    pub sunset: Option<i64>,
     /**
      * Time of sunrise (civil twilight) in milliseconds or -1 in the case the
      * day or night never ends.
      */
-    pub sunrise: i64,
+    pub sunrise: Option<i64>,
 }
 
 /**
@@ -75,14 +75,14 @@ pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> Tw
     if cos_hour_angle >= 1.0 {
         return TwilightResult {
             state: State::Night,
-            sunset: -1,
-            sunrise: -1,
+            sunset: None,
+            sunrise: None,
         };
     } else if cos_hour_angle <= -1.0 {
         return TwilightResult {
             state: State::Day,
-            sunset: -1,
-            sunrise: -1,
+            sunset: None,
+            sunrise: None,
         };
     }
 
@@ -99,8 +99,8 @@ pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> Tw
 
     TwilightResult {
         state: state,
-        sunset: sunset,
-        sunrise: sunrise,
+        sunset: Some(sunset),
+        sunrise: Some(sunrise),
     }
 }
 
@@ -119,7 +119,7 @@ mod tests {
 
         let result = calculate_twilight(now_milliseconds, lat, lon);
         assert_eq!(result.state, State::Day);
-        assert_eq!(result.sunrise, 1566680508648);  // 05:01:48
-        assert_eq!(result.sunset, 1566730442552);  // 18:54:02
+        assert_eq!(result.sunrise, Some(1566680508648));  // 05:01:48
+        assert_eq!(result.sunset, Some(1566730442552));  // 18:54:02
     }
 }
