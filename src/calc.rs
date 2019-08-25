@@ -21,29 +21,21 @@ const UTC_2000: i64 = 946728000000;
 const DAY_IN_MILLIS: i64 = 1000 * 60 * 60 * 24;
 
 pub(crate) struct TwilightResult {
-    /**
-     * Current state
-     */
+    /// Current state
     pub state: State,
-    /**
-     * Time of sunset (civil twilight) in milliseconds or -1 in the case the day
-     * or night never ends.
-     */
+    /// Time of sunset (civil twilight) in milliseconds or -1 in the case the day
+    /// or night never ends.
     pub sunset: Option<i64>,
-    /**
-     * Time of sunrise (civil twilight) in milliseconds or -1 in the case the
-     * day or night never ends.
-     */
+    /// Time of sunrise (civil twilight) in milliseconds or -1 in the case the
+    /// day or night never ends.
     pub sunrise: Option<i64>,
 }
 
-/**
- * calculates the civil twilight bases on time and geo-coordinates.
- *
- * @param time time in milliseconds.
- * @param latitude latitude in degrees.
- * @param longitude latitude in degrees.
- */
+/// calculates the civil twilight bases on time and geo-coordinates.
+///
+/// @param time time in milliseconds.
+/// @param latitude latitude in degrees.
+/// @param longitude latitude in degrees.
 pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> TwilightResult {
     let days_since_2000 = (time - UTC_2000) as f64 / (DAY_IN_MILLIS as f64);
 
