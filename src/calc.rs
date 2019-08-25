@@ -1,7 +1,5 @@
 use crate::{State, Twilight, TwilightTimes};
 
-const DEGREES_TO_RADIANS: f64 = ::std::f64::consts::PI / 180.0;
-
 // element for calculating solar transit.
 const J0: f64 = 0.0009;
 
@@ -49,7 +47,7 @@ pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> Tw
     // declination of sun
     let solar_dec = (solar_lng.sin() * OBLIQUITY.sin()).asin();
 
-    let lat_rad = latitude * DEGREES_TO_RADIANS;
+    let lat_rad = latitude * ::std::f64::consts::PI / 180.0;
 
     let result_factory = |sun_altitude_delta_degrees: f64| {
         let sun_altitude_delta = ::std::f64::consts::PI / 180.0 * sun_altitude_delta_degrees;
