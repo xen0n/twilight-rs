@@ -46,6 +46,11 @@ impl Twilight {
         calc::calculate_twilight(ms, latitude, longitude)
     }
 
+    pub fn now(latitude: f64, longitude: f64) -> Self {
+        let time_of_day = ::chrono::Utc::now();
+        Self::calculate(time_of_day, latitude, longitude)
+    }
+
     pub fn state(&self) -> State {
         self.state
     }
