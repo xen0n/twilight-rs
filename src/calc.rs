@@ -32,8 +32,10 @@ pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> Tw
     let mean_anomaly = 6.240059968 + days_since_2000 * 0.01720197;
 
     // true anomaly
-    let true_anomaly = mean_anomaly + C1 * mean_anomaly.sin() + C2
-            * (2.0 * mean_anomaly).sin() + C3 * (3.0 * mean_anomaly).sin();
+    let true_anomaly = mean_anomaly
+        + C1 * mean_anomaly.sin()
+        + C2 * (2.0 * mean_anomaly).sin()
+        + C3 * (3.0 * mean_anomaly).sin();
 
     // ecliptic longitude
     let solar_lng = true_anomaly + 1.796593063 + ::std::f64::consts::PI;
@@ -41,16 +43,17 @@ pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> Tw
     // solar transit in days since 2000
     let arc_longitude = -longitude / 360.0;
     let n = (days_since_2000 - J0 - arc_longitude).round();
-    let solar_transit_j2000 = n + J0 + arc_longitude + 0.0053 * mean_anomaly.sin()
-            + -0.0069 * (2.0 * solar_lng).sin();
+    let solar_transit_j2000 =
+        n + J0 + arc_longitude + 0.0053 * mean_anomaly.sin() + -0.0069 * (2.0 * solar_lng).sin();
 
     // declination of sun
     let solar_dec = (solar_lng.sin() * OBLIQUITY.sin()).asin();
 
     let lat_rad = latitude * DEGREES_TO_RADIANS;
 
-    let cos_hour_angle = (ALTITUDE_CORRECTION_CIVIL_TWILIGHT.sin() - lat_rad.sin()
-            * solar_dec.sin()) / (lat_rad.cos() * solar_dec.cos());
+    let cos_hour_angle = (ALTITUDE_CORRECTION_CIVIL_TWILIGHT.sin()
+        - lat_rad.sin() * solar_dec.sin())
+        / (lat_rad.cos() * solar_dec.cos());
     // The day or night never ends for the given date and location, if this value is out of
     // range.
     if cos_hour_angle >= 1.0 {
@@ -67,8 +70,10 @@ pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> Tw
 
     let hour_angle = cos_hour_angle.acos() / (2.0 * ::std::f64::consts::PI);
 
-    let sunset = ((solar_transit_j2000 + hour_angle) * DAY_IN_MILLIS as f64).round() as i64 + UTC_2000;
-    let sunrise = ((solar_transit_j2000 - hour_angle) * DAY_IN_MILLIS as f64).round() as i64 + UTC_2000;
+    let sunset =
+        ((solar_transit_j2000 + hour_angle) * DAY_IN_MILLIS as f64).round() as i64 + UTC_2000;
+    let sunrise =
+        ((solar_transit_j2000 - hour_angle) * DAY_IN_MILLIS as f64).round() as i64 + UTC_2000;
 
     let state = if sunrise < time && sunset > time {
         State::Day

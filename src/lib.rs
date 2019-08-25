@@ -37,11 +37,7 @@ pub struct Twilight {
 }
 
 impl Twilight {
-    pub fn calculate<T: Timestamp>(
-        time_of_day: T,
-        latitude: f64,
-        longitude: f64,
-    ) -> Self {
+    pub fn calculate<T: Timestamp>(time_of_day: T, latitude: f64, longitude: f64) -> Self {
         let ms = time_of_day.as_unix_timestamp_ms();
         calc::calculate_twilight(ms, latitude, longitude)
     }
