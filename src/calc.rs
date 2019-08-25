@@ -51,9 +51,18 @@ pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> Tw
 
     let lat_rad = latitude * DEGREES_TO_RADIANS;
 
-    let cos_hour_angle = (ALTITUDE_CORRECTION_CIVIL_TWILIGHT.sin()
-        - lat_rad.sin() * solar_dec.sin())
-        / (lat_rad.cos() * solar_dec.cos());
+    let result_factory = |sun_altitude_delta: f64| {
+        let cos_hour_angle = (sun_altitude_delta.sin()
+            - lat_rad.sin() * solar_dec.sin())
+            / (lat_rad.cos() * solar_dec.cos());
+
+        cos_hour_angle_to_times(time, solar_transit_j2000, cos_hour_angle)
+    };
+
+    result_factory(ALTITUDE_CORRECTION_CIVIL_TWILIGHT)
+}
+
+fn cos_hour_angle_to_times(time: i64, solar_transit_j2000: f64, cos_hour_angle: f64) -> Twilight {
     // The day or night never ends for the given date and location, if this value is out of
     // range.
     if cos_hour_angle >= 1.0 {
@@ -70,12 +79,9 @@ pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> Tw
 
     let hour_angle = cos_hour_angle.acos() / (2.0 * ::std::f64::consts::PI);
 
-    let sunset =
-        ((solar_transit_j2000 + hour_angle) * DAY_IN_MILLIS as f64).round() as i64 + UTC_2000;
-    let sunrise =
-        ((solar_transit_j2000 - hour_angle) * DAY_IN_MILLIS as f64).round() as i64 + UTC_2000;
+    let times = hour_angle_to_times(solar_transit_j2000, hour_angle);
 
-    let state = if sunrise < time && sunset > time {
+    let state = if times.sunrise < time && times.sunset > time {
         State::Day
     } else {
         State::Night
@@ -83,10 +89,19 @@ pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> Tw
 
     Twilight {
         state: state,
-        times: Some(TwilightTimes {
-            sunset: sunset,
-            sunrise: sunrise,
-        }),
+        times: Some(times),
+    }
+}
+
+fn hour_angle_to_times(solar_transit_j2000: f64, hour_angle: f64) -> TwilightTimes {
+    let sunset =
+        ((solar_transit_j2000 + hour_angle) * DAY_IN_MILLIS as f64).round() as i64 + UTC_2000;
+    let sunrise =
+        ((solar_transit_j2000 - hour_angle) * DAY_IN_MILLIS as f64).round() as i64 + UTC_2000;
+
+    TwilightTimes {
+        sunset: sunset,
+        sunrise: sunrise,
     }
 }
 
