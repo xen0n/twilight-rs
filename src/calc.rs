@@ -115,8 +115,13 @@ mod tests {
               $lon_h: expr , $lon_m: expr , $lon_s: expr)
              @ $now: expr
              => {$state: expr, $sunrise: expr, $sunset: expr, }) => {
-                let lat = ($lat_h * 3600 + $lat_m * 60 + $lat_s) as f64 / 3600.0;
-                let lon = ($lon_h * 3600 + $lon_m * 60 + $lon_s) as f64 / 3600.0;
+                let lat_h = $lat_h;
+                let (lat_sign, lat_h) = if lat_h < 0 { (-1.0, -lat_h) } else { (1.0, lat_h) };
+                let lat = lat_sign * (lat_h * 3600 + $lat_m * 60 + $lat_s) as f64 / 3600.0;
+
+                let lon_h = $lon_h;
+                let (lon_sign, lon_h) = if lon_h < 0 { (-1.0, -lon_h) } else { (1.0, lon_h) };
+                let lon = lon_sign * (lon_h * 3600 + $lon_m * 60 + $lon_s) as f64 / 3600.0;
 
                 let result = calculate_twilight($now, lat, lon);
 
@@ -135,6 +140,17 @@ mod tests {
                 State::Day,
                 Some(1566680508648),  // 05:01:48
                 Some(1566730442552),  // 18:54:02
+            }
+        );
+
+        testcase!(
+            // location of the Antarctic Taishan station
+            (-73, 51, 50, 76, 58, 29)
+            @ 1546272000000  // 2019-01-01T00:00:00+08:00
+            => {
+                State::Day,
+                None,
+                None,
             }
         );
     }
