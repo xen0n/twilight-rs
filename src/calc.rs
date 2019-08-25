@@ -6,7 +6,7 @@ const DEGREES_TO_RADIANS: f64 = ::std::f64::consts::PI / 180.0;
 const J0: f64 = 0.0009;
 
 // correction for civil twilight
-const ALTITUDE_CORRECTION_CIVIL_TWILIGHT: f64 = -0.104719755;
+const ALTITUDE_CORRECTION_CIVIL_TWILIGHT: f64 = ::std::f64::consts::PI / 180.0 * 6.0;
 
 // coefficients for calculating Equation of Center.
 const C1: f64 = 0.0334196;
@@ -152,8 +152,8 @@ mod tests {
             @ 1566703808294  // 2019-08-25T11:30:08.294+08:00
             => {
                 State::Day,
-                1566680508648,  // 05:01:48
-                1566730442552,  // 18:54:02
+                1566683966997,  // 05:59:26
+                1566726984202,  // 17:56:24
             }
         );
 
