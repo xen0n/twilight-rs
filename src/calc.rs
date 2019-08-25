@@ -110,16 +110,32 @@ mod tests {
 
     #[test]
     fn it_works() {
-        // location of Shanghai took from Wikipedia (People's Square)
-        let lat = (31 * 3600 + 13 * 60 + 43) as f64 / 3600.0;
-        let lon = (121 * 3600 + 28 * 60 + 29) as f64 / 3600.0;
+        macro_rules! testcase {
+            (($lat_h: expr , $lat_m: expr , $lat_s: expr,
+              $lon_h: expr , $lon_m: expr , $lon_s: expr)
+             @ $now: expr
+             => {$state: expr, $sunrise: expr, $sunset: expr, }) => {
+                let lat = ($lat_h * 3600 + $lat_m * 60 + $lat_s) as f64 / 3600.0;
+                let lon = ($lon_h * 3600 + $lon_m * 60 + $lon_s) as f64 / 3600.0;
 
-        // the time I wrote this test
-        let now_milliseconds = 1566703808294;  // 2019-08-25T11:30:08.294+08:00
+                let result = calculate_twilight($now, lat, lon);
 
-        let result = calculate_twilight(now_milliseconds, lat, lon);
-        assert_eq!(result.state, State::Day);
-        assert_eq!(result.sunrise, Some(1566680508648));  // 05:01:48
-        assert_eq!(result.sunset, Some(1566730442552));  // 18:54:02
+                assert_eq!(result.state, $state);
+                assert_eq!(result.sunrise, $sunrise);
+                assert_eq!(result.sunset, $sunset);
+            };
+        }
+
+        testcase!(
+            // location of Shanghai took from Wikipedia (People's Square)
+            (31, 13, 43, 121, 28, 29)
+            // the time I wrote this test
+            @ 1566703808294  // 2019-08-25T11:30:08.294+08:00
+            => {
+                State::Day,
+                Some(1566680508648),  // 05:01:48
+                Some(1566730442552),  // 18:54:02
+            }
+        );
     }
 }
