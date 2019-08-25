@@ -1,0 +1,16 @@
+# simplistic configuration according to official Travis docs
+#
+# https://docs.travis-ci.com/user/languages/rust/
+
+dist: bionic
+
+language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+matrix:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+cache: cargo
