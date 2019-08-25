@@ -6,7 +6,7 @@ const DEGREES_TO_RADIANS: f64 = ::std::f64::consts::PI / 180.0;
 const J0: f64 = 0.0009;
 
 // correction for civil twilight
-const ALTIDUTE_CORRECTION_CIVIL_TWILIGHT: f64 = -0.104719755;
+const ALTITUDE_CORRECTION_CIVIL_TWILIGHT: f64 = -0.104719755;
 
 // coefficients for calculating Equation of Center.
 const C1: f64 = 0.0334196;
@@ -68,7 +68,7 @@ pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> Tw
 
     let lat_rad = latitude * DEGREES_TO_RADIANS;
 
-    let cos_hour_angle = (ALTIDUTE_CORRECTION_CIVIL_TWILIGHT.sin() - lat_rad.sin()
+    let cos_hour_angle = (ALTITUDE_CORRECTION_CIVIL_TWILIGHT.sin() - lat_rad.sin()
             * solar_dec.sin()) / (lat_rad.cos() * solar_dec.cos());
     // The day or night never ends for the given date and location, if this value is out of
     // range.
