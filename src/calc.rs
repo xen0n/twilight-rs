@@ -5,8 +5,8 @@ const DEGREES_TO_RADIANS: f64 = ::std::f64::consts::PI / 180.0;
 // element for calculating solar transit.
 const J0: f64 = 0.0009;
 
-// correction for civil twilight
-const ALTITUDE_CORRECTION_CIVIL_TWILIGHT: f64 = ::std::f64::consts::PI / 180.0 * 6.0;
+// solar elevation angle for civil twilight
+const SOLAR_ELEVATION_CIVIL_TWILIGHT: f64 = 6.0;
 
 // coefficients for calculating Equation of Center.
 const C1: f64 = 0.0334196;
@@ -51,7 +51,8 @@ pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> Tw
 
     let lat_rad = latitude * DEGREES_TO_RADIANS;
 
-    let result_factory = |sun_altitude_delta: f64| {
+    let result_factory = |sun_altitude_delta_degrees: f64| {
+        let sun_altitude_delta = ::std::f64::consts::PI / 180.0 * sun_altitude_delta_degrees;
         let cos_hour_angle = (sun_altitude_delta.sin()
             - lat_rad.sin() * solar_dec.sin())
             / (lat_rad.cos() * solar_dec.cos());
@@ -59,7 +60,7 @@ pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> Tw
         cos_hour_angle_to_times(time, solar_transit_j2000, cos_hour_angle)
     };
 
-    result_factory(ALTITUDE_CORRECTION_CIVIL_TWILIGHT)
+    result_factory(SOLAR_ELEVATION_CIVIL_TWILIGHT)
 }
 
 fn cos_hour_angle_to_times(time: i64, solar_transit_j2000: f64, cos_hour_angle: f64) -> Twilight {
