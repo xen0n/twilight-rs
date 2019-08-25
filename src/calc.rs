@@ -1,19 +1,19 @@
 use crate::State;
 
-const DEGREES_TO_RADIANS: f32 = ::std::f32::consts::PI / 180.0f32;
+const DEGREES_TO_RADIANS: f64 = ::std::f64::consts::PI / 180.0;
 
 // element for calculating solar transit.
-const J0: f32 = 0.0009f32;
+const J0: f64 = 0.0009;
 
 // correction for civil twilight
-const ALTIDUTE_CORRECTION_CIVIL_TWILIGHT: f32 = -0.104719755f32;
+const ALTIDUTE_CORRECTION_CIVIL_TWILIGHT: f64 = -0.104719755;
 
 // coefficients for calculating Equation of Center.
-const C1: f32 = 0.0334196f32;
-const C2: f32 = 0.000349066f32;
-const C3: f32 = 0.000005236f32;
+const C1: f64 = 0.0334196;
+const C2: f64 = 0.000349066;
+const C3: f64 = 0.000005236;
 
-const OBLIQUITY: f32 = 0.40927971f32;
+const OBLIQUITY: f64 = 0.40927971;
 
 // Java time on Jan 1, 2000 12:00 UTC.
 const UTC_2000: i64 = 946728000000;
@@ -45,40 +45,40 @@ pub(crate) struct TwilightResult {
  * @param longitude latitude in degrees.
  */
 pub(crate) fn calculateTwilight(time: i64, latitude: f64, longitude: f64) -> TwilightResult {
-    let daysSince2000: f32 = (time - UTC_2000) as f32 / (DAY_IN_MILLIS as f32);
+    let daysSince2000 = (time - UTC_2000) as f64 / (DAY_IN_MILLIS as f64);
 
     // mean anomaly
-    let meanAnomaly: f32 = 6.240059968f32 + daysSince2000 * 0.01720197f32;
+    let meanAnomaly = 6.240059968 + daysSince2000 * 0.01720197;
 
     // true anomaly
-    let trueAnomaly: f64 = (meanAnomaly + C1 * meanAnomaly.sin() + C2
-            * (2f32 * meanAnomaly).sin() + C3 * (3f32 * meanAnomaly).sin()) as f64;
+    let trueAnomaly = meanAnomaly + C1 * meanAnomaly.sin() + C2
+            * (2.0 * meanAnomaly).sin() + C3 * (3.0 * meanAnomaly).sin();
 
     // ecliptic longitude
-    let solarLng: f64 = trueAnomaly + 1.796593063f64 + ::std::f64::consts::PI;
+    let solarLng = trueAnomaly + 1.796593063 + ::std::f64::consts::PI;
 
     // solar transit in days since 2000
-    let arcLongitude: f64 = -longitude / 360f64;
-    let n: f32 = ((daysSince2000 - J0) as f64 - arcLongitude).round() as f32;
-    let solarTransitJ2000: f64 = (n + J0) as f64 + arcLongitude + 0.0053f64 * (meanAnomaly as f64).sin()
-            + -0.0069f64 * (2f64 * solarLng).sin();
+    let arcLongitude = -longitude / 360.0;
+    let n = (daysSince2000 - J0 - arcLongitude).round();
+    let solarTransitJ2000 = n + J0 + arcLongitude + 0.0053 * meanAnomaly.sin()
+            + -0.0069 * (2.0 * solarLng).sin();
 
     // declination of sun
-    let solarDec: f64 = (solarLng.sin() * (OBLIQUITY as f64).sin()).asin();
+    let solarDec = (solarLng.sin() * OBLIQUITY.sin()).asin();
 
-    let latRad: f64 = latitude * (DEGREES_TO_RADIANS as f64);
+    let latRad = latitude * DEGREES_TO_RADIANS;
 
-    let cosHourAngle: f64 = ((ALTIDUTE_CORRECTION_CIVIL_TWILIGHT as f64).sin() - latRad.sin()
+    let cosHourAngle = (ALTIDUTE_CORRECTION_CIVIL_TWILIGHT.sin() - latRad.sin()
             * solarDec.sin()) / (latRad.cos() * solarDec.cos());
     // The day or night never ends for the given date and location, if this value is out of
     // range.
-    if cosHourAngle >= 1f64 {
+    if cosHourAngle >= 1.0 {
         return TwilightResult {
             state: State::Night,
             sunset: -1,
             sunrise: -1,
         };
-    } else if cosHourAngle <= -1f64 {
+    } else if cosHourAngle <= -1.0 {
         return TwilightResult {
             state: State::Day,
             sunset: -1,
@@ -86,10 +86,10 @@ pub(crate) fn calculateTwilight(time: i64, latitude: f64, longitude: f64) -> Twi
         };
     }
 
-    let hourAngle: f32 = (cosHourAngle.acos() / (2f64 * ::std::f64::consts::PI)) as f32;
+    let hourAngle = cosHourAngle.acos() / (2.0 * ::std::f64::consts::PI);
 
-    let sunset = ((solarTransitJ2000 + hourAngle as f64) * DAY_IN_MILLIS as f64).round() as i64 + UTC_2000;
-    let sunrise = ((solarTransitJ2000 - hourAngle as f64) * DAY_IN_MILLIS as f64).round() as i64 + UTC_2000;
+    let sunset = ((solarTransitJ2000 + hourAngle) * DAY_IN_MILLIS as f64).round() as i64 + UTC_2000;
+    let sunrise = ((solarTransitJ2000 - hourAngle) * DAY_IN_MILLIS as f64).round() as i64 + UTC_2000;
 
     let state = if sunrise < time && sunset > time {
         State::Day
@@ -119,7 +119,7 @@ mod tests {
 
         let result = calculateTwilight(now_milliseconds, lat, lon);
         assert_eq!(result.state, State::Day);
-        assert_eq!(result.sunrise, 1566680515294);  // 05:01:55
-        assert_eq!(result.sunset, 1566730449118);  // 18:54:09
+        assert_eq!(result.sunrise, 1566680508648);  // 05:01:48
+        assert_eq!(result.sunset, 1566730442552);  // 18:54:02
     }
 }
