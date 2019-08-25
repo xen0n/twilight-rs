@@ -1,3 +1,16 @@
+//! # twilight
+//!
+//! This is a straight-forward port of Android's `TwilightCalculator`,
+//! like [this one from LineageOS's sources][java-link], that one can use
+//! to calculate sunrise and sunset times on a given time and location.
+//!
+//! The public API is meant to be used together with [the `chrono` library][chrono].
+//!
+//! [java-link]: https://github.com/LineageOS/android_frameworks_support/blob/lineage-16.0/v7/appcompat/src/main/java/androidx/appcompat/app/TwilightCalculator.java
+//! [chrono]: https://github.com/chronotope/chrono
+
+#![deny(missing_docs, warnings)]
+
 mod calc;
 
 /// State of day.
@@ -37,20 +50,26 @@ pub struct Twilight {
 }
 
 impl Twilight {
+    /// Calculates civil twilight times for a given time and location.
     pub fn calculate<T: Timestamp>(time_of_day: T, latitude: f64, longitude: f64) -> Self {
         let ms = time_of_day.as_unix_timestamp_ms();
         calc::calculate_twilight(ms, latitude, longitude)
     }
 
+    /// Convenient method for calculating civil twilight times with the
+    /// current time, for a given location.
     pub fn now(latitude: f64, longitude: f64) -> Self {
         let time_of_day = ::chrono::Utc::now();
         Self::calculate(time_of_day, latitude, longitude)
     }
 
+    /// Returns if the specified time is day or night at the specified location.
     pub fn state(&self) -> State {
         self.state
     }
 
+    /// Returns the civil twilight times, if the specified location is not
+    /// under polar day/night at the given time.
     pub fn twilight_times(&self) -> Option<TwilightTimes> {
         self.times
     }
