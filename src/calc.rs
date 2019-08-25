@@ -1,4 +1,4 @@
-use crate::State;
+use crate::{State, Twilight, TwilightTimes};
 
 const DEGREES_TO_RADIANS: f64 = ::std::f64::consts::PI / 180.0;
 
@@ -20,23 +20,12 @@ const UTC_2000: i64 = 946728000000;
 
 const DAY_IN_MILLIS: i64 = 1000 * 60 * 60 * 24;
 
-pub(crate) struct TwilightResult {
-    /// Current state
-    pub state: State,
-    /// Time of sunset (civil twilight) in milliseconds or -1 in the case the day
-    /// or night never ends.
-    pub sunset: Option<i64>,
-    /// Time of sunrise (civil twilight) in milliseconds or -1 in the case the
-    /// day or night never ends.
-    pub sunrise: Option<i64>,
-}
-
 /// calculates the civil twilight bases on time and geo-coordinates.
 ///
 /// @param time time in milliseconds.
 /// @param latitude latitude in degrees.
 /// @param longitude latitude in degrees.
-pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> TwilightResult {
+pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> Twilight {
     let days_since_2000 = (time - UTC_2000) as f64 / (DAY_IN_MILLIS as f64);
 
     // mean anomaly
@@ -65,16 +54,14 @@ pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> Tw
     // The day or night never ends for the given date and location, if this value is out of
     // range.
     if cos_hour_angle >= 1.0 {
-        return TwilightResult {
+        return Twilight {
             state: State::Night,
-            sunset: None,
-            sunrise: None,
+            times: None,
         };
     } else if cos_hour_angle <= -1.0 {
-        return TwilightResult {
+        return Twilight {
             state: State::Day,
-            sunset: None,
-            sunrise: None,
+            times: None,
         };
     }
 
@@ -89,10 +76,12 @@ pub(crate) fn calculate_twilight(time: i64, latitude: f64, longitude: f64) -> Tw
         State::Night
     };
 
-    TwilightResult {
+    Twilight {
         state: state,
-        sunset: Some(sunset),
-        sunrise: Some(sunrise),
+        times: Some(TwilightTimes {
+            sunset: sunset,
+            sunrise: sunrise,
+        }),
     }
 }
 
@@ -107,6 +96,35 @@ mod tests {
               $lon_h: expr , $lon_m: expr , $lon_s: expr)
              @ $now: expr
              => {$state: expr, $sunrise: expr, $sunset: expr, }) => {
+                testcase!(
+                    ($lat_h, $lat_m, $lat_s, $lon_h, $lon_m, $lon_s) @ $now
+                    => {
+                        $state,
+                        Some(TwilightTimes {
+                            sunrise: $sunrise,
+                            sunset: $sunset,
+                        })
+                    }
+                );
+            };
+
+            (($lat_h: expr , $lat_m: expr , $lat_s: expr,
+              $lon_h: expr , $lon_m: expr , $lon_s: expr)
+             @ $now: expr
+             => {$state: expr, }) => {
+                testcase!(
+                    ($lat_h, $lat_m, $lat_s, $lon_h, $lon_m, $lon_s) @ $now
+                    => {
+                        $state,
+                        None
+                    }
+                );
+            };
+
+            (($lat_h: expr , $lat_m: expr , $lat_s: expr,
+              $lon_h: expr , $lon_m: expr , $lon_s: expr)
+             @ $now: expr
+             => {$state: expr, $times: expr}) => {
                 let lat_h = $lat_h;
                 let (lat_sign, lat_h) = if lat_h < 0 { (-1.0, -lat_h) } else { (1.0, lat_h) };
                 let lat = lat_sign * (lat_h * 3600 + $lat_m * 60 + $lat_s) as f64 / 3600.0;
@@ -118,8 +136,7 @@ mod tests {
                 let result = calculate_twilight($now, lat, lon);
 
                 assert_eq!(result.state, $state);
-                assert_eq!(result.sunrise, $sunrise);
-                assert_eq!(result.sunset, $sunset);
+                assert_eq!(result.times, $times);
             };
         }
 
@@ -130,8 +147,8 @@ mod tests {
             @ 1566703808294  // 2019-08-25T11:30:08.294+08:00
             => {
                 State::Day,
-                Some(1566680508648),  // 05:01:48
-                Some(1566730442552),  // 18:54:02
+                1566680508648,  // 05:01:48
+                1566730442552,  // 18:54:02
             }
         );
 
@@ -141,8 +158,6 @@ mod tests {
             @ 1546272000000  // 2019-01-01T00:00:00+08:00
             => {
                 State::Day,
-                None,
-                None,
             }
         );
     }
